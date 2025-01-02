@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Toilet Game</title>
+    <style>
+        /* General Styles */
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: "Courier New", monospace;
+            background-color: black;
+            color: #00ff00;
+        }
+
+        /* Password Screen */
+        #passwordScreen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: black;
+        }
+
+        #passwordInput {
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        #passwordButton {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 10px;
+            cursor: pointer;
+            background-color: #00ff00;
+            color: black;
+            border: none;
+            border-radius: 5px;
+        }
+
+        #passwordButton:hover {
+            background-color: #008000;
+        }
+
+        /* Game Container */
+        #gameContainer {
+            display: none;
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #matrixBackground {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                rgba(0, 255, 0, 0.2) 0px,
+                rgba(0, 255, 0, 0.2) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            animation: matrixRain 5s infinite linear;
+            z-index: -1;
+        }
+
+        @keyframes matrixRain {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(100%); }
+        }
+
+        /* Player */
+        #player {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 50px;
+            background: url('https://i.imgur.com/6bJYpGV.png') no-repeat center/cover;
+            border-radius: 50%;
+        }
+
+        /* Toilet */
+        .toilet {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: url('https://i.imgur.com/FuaVxFb.png') no-repeat center/cover;
+            filter: hue-rotate(90deg);
+        }
+
+        /* Score */
+        #score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 20px;
+        }
+
+        /* Game Over */
+        #gameOver {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            font-size: 36px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        #restartButton {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 20px;
+            background-color: #00ff00;
+            color: black;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #restartButton:hover {
+            background-color: #008000;
+        }
+
+        /* Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25%, 75% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Password Screen -->
+    <div id="passwordScreen">
+        <input type="password" id="passwordInput" placeholder="Enter Password">
+        <button id="passwordButton">Submit</button>
+    </div>
+
+    <!-- Game Container -->
+    <div id="gameContainer">
+        <div id="matrixBackground"></div>
+        <div id="player"></div>
+        <div id="score">Score: 0</div>
+        <div id="gameOver">
+            Game Over! <br>
+            <button id="restartButton">Restart</button>
+        </div>
+    </div>
+
+    <script>
+        const passwordScreen = document.getElementById("passwordScreen");
+        const passwordInput = document.getElementById("passwordInput");
+        const passwordButton = document.getElementById("passwordButton");
+        const gameContainer = document.getElementById("gameContainer");
+        const player = document.getElementById("player");
+        const scoreDisplay = document.getElementById("score");
+        const gameOverDisplay = document.getElementById("gameOver");
+        const restartButton = document.getElementById("restartButton");
+
+        let playerPosition = window.innerWidth / 2 - 25;
+        let score = 0;
+        let gameOver = false;
+        let maxToilets = 1;
+        let toiletSpeed = 5;
+        let spawnRate = 1000;
+        let keys = { ArrowLeft: false, ArrowRight: false };
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key in keys) keys[e.key] = true;
+        });
+
+        document.addEventListener("keyup", (e) => {
+            if (e.key in keys) keys[e.key] = false;
+        });
+
+        function movePlayer() {
+            const playerSpeed = 10;
+            if (keys.ArrowLeft) playerPosition = Math.max(0, playerPosition - playerSpeed);
+            if (keys.ArrowRight) playerPosition = Math.min(window.innerWidth - 50, playerPosition + playerSpeed);
+            player.style.left = playerPosition + "px";
+            if (!gameOver) requestAnimationFrame(movePlayer);
+        }
+
+        function spawnToilets() {
+            if (gameOver) return;
+            const toilet = document.createElement("div");
+            toilet.classList.add("toilet");
+            toilet.style.left = Math.random() * (window.innerWidth - 50) + "px";
+            toilet.style.top = "0px";
+            gameContainer.appendChild(toilet);
+
+            let position = 0;
+            const fallInterval = setInterval(() => {
+                if (gameOver) {
+                    clearInterval(fallInterval);
+                    return;
+                }
+
+                position += toiletSpeed;
+                toilet.style.top = position + "px";
+
+                const playerRect = player.getBoundingClientRect();
+                const toiletRect = toilet.getBoundingClientRect();
+
+                if (
+                    playerRect.left < toiletRect.right &&
+                    playerRect.right > toiletRect.left &&
+                    playerRect.top < toiletRect.bottom &&
+                    playerRect.bottom > toiletRect.top
+                ) {
+                    player.style.animation = "shake 0.5s";
+                    setTimeout(() => player.style.animation = "", 500);
+                    endGame();
+                }
+
+                if (position > window.innerHeight) {
+                    clearInterval(fallInterval);
+                    toilet.remove();
+                    score++;
+                    updateDifficulty();
+                }
+            }, 20);
+
+            setTimeout(spawnToilets, spawnRate);
+        }
+
+        function updateDifficulty() {
+            scoreDisplay.textContent = `Score: ${score}`;
+            if (score % 5 === 0) {
+                maxToilets++;
+                toiletSpeed += 0.5;
+                spawnRate = Math.max(500, spawnRate - 50);
+            }
+        }
+
+        function endGame() {
+            gameOver = true;
+            gameOverDisplay.style.display = "block";
+        }
+
+        function startGame() {
+            score = 0;
+            gameOver = false;
+            maxToilets = 1;
+            toiletSpeed = 5;
+            spawnRate = 1000;
+
+            scoreDisplay.textContent = "Score: 0";
+            gameOverDisplay.style.display = "none";
+            document.querySelectorAll(".toilet").forEach(toilet => toilet.remove());
+
+            spawnToilets();
+            movePlayer();
+        }
+
+        passwordButton.addEventListener("click", () => {
+            if (passwordInput.value === "matthewhaslrizz") {
+                passwordScreen.style.display = "none";
+                gameContainer.style.display = "block";
+                startGame();
+            } else {
+                alert("Incorrect password. Try again.");
+            }
+        });
+
+        restartButton.addEventListener("click", startGame);
+    </script>
+</body>
+</html>
