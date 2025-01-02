@@ -14,39 +14,8 @@
             color: #00ff00;
         }
 
-        /* Password Screen */
-        #passwordScreen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background-color: black;
-        }
-
-        #passwordInput {
-            padding: 10px;
-            font-size: 16px;
-        }
-
-        #passwordButton {
-            padding: 10px 20px;
-            font-size: 16px;
-            margin-top: 10px;
-            cursor: pointer;
-            background-color: #00ff00;
-            color: black;
-            border: none;
-            border-radius: 5px;
-        }
-
-        #passwordButton:hover {
-            background-color: #008000;
-        }
-
         /* Game Container */
         #gameContainer {
-            display: none;
             position: relative;
             width: 100vw;
             height: 100vh;
@@ -138,12 +107,6 @@
     </style>
 </head>
 <body>
-    <!-- Password Screen -->
-    <div id="passwordScreen">
-        <input type="password" id="passwordInput" placeholder="Enter Password">
-        <button id="passwordButton">Submit</button>
-    </div>
-
     <!-- Game Container -->
     <div id="gameContainer">
         <div id="matrixBackground"></div>
@@ -156,9 +119,6 @@
     </div>
 
     <script>
-        const passwordScreen = document.getElementById("passwordScreen");
-        const passwordInput = document.getElementById("passwordInput");
-        const passwordButton = document.getElementById("passwordButton");
         const gameContainer = document.getElementById("gameContainer");
         const player = document.getElementById("player");
         const scoreDisplay = document.getElementById("score");
@@ -261,17 +221,10 @@
             movePlayer();
         }
 
-        passwordButton.addEventListener("click", () => {
-            if (passwordInput.value === "matthewhaslrizz") {
-                passwordScreen.style.display = "none";
-                gameContainer.style.display = "block";
-                startGame();
-            } else {
-                alert("Incorrect password. Try again.");
-            }
-        });
-
         restartButton.addEventListener("click", startGame);
+
+        // Start the game immediately
+        startGame();
     </script>
 </body>
 </html>
